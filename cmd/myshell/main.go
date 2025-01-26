@@ -26,20 +26,29 @@ func main() {
 
     fields := strings.Fields(input)
 
-    if fields[0] == "exit" {
-      if len(fields) > 1 {
-        num, errConv := strconv.Atoi(fields[1])
-        if errConv != nil {
-          fmt.Fprintln(os.Stderr, "Invalid error code", errConv)
-          continue
-        }
-        os.Exit(num)
-      } else {
-        os.Exit(0)
-      }
-      break
-    }
+    command := fields[0]
+    arguments := fields[1:]
 
-    fmt.Println(strings.TrimSuffix(input, "\n") + ": command not found")
+    switch command {
+      case "exit":
+        if len(fields) > 1 {
+          code, errConv := strconv.Atoi(fields[1])
+          if errConv != nil {
+            fmt.Fprintln(os.Stderr, "Invalid error code", errConv)
+            continue
+          }
+          os.Exit(code)
+        } else {
+          os.Exit(0)
+        }  
+      case "echo":
+        if len(arguments) < 1 {
+          fmt.Fprintln(os.Stderr, "Nothing to echo")
+        } else {
+          fmt.Println(strings.Join(arguments, " "))
+        }
+      default:
+        fmt.Println(strings.TrimSuffix(input, "\n") + ": command not found")
+    }
   }
 }
