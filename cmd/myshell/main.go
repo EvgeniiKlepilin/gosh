@@ -72,7 +72,7 @@ func main() {
           }
           for _, executable := range executables {
             if executable.Name() == typeCommand {
-              fmt.Println(typeCommand + " is " + path + executable.Name())
+              fmt.Println(typeCommand + " is " + path + "/" + executable.Name())
               isFound = true
               break
             }
