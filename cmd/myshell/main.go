@@ -17,6 +17,8 @@ var BUILTINS = map[string]bool{
   "type": true,
 }
 
+var PATH = os.Getenv("PATH")
+
 func main() {
   for {
     fmt.Fprint(os.Stdout, "$ ")
@@ -54,11 +56,34 @@ func main() {
           fmt.Fprintln(os.Stderr, "Invalid arguments")
           continue
         }
-        _, present := BUILTINS[arguments[0]]
+        typeCommand := arguments[0]
+        _, present := BUILTINS[typeCommand]
         if present {
-          fmt.Println(arguments[0] + " is a shell builtin")
-        } else {
-          fmt.Println(arguments[0] + ": not found")
+          fmt.Println(typeCommand + " is a shell builtin")
+          break
+        }
+        paths := strings.Split(PATH, ":")
+        isFound := false
+        for _, path := range paths {
+          executables, errReadDir := os.ReadDir(path)
+          if errReadDir != nil {
+            fmt.Fprintln(os.Stderr, "Error reading directory: ", errReadDir)
+            os.Exit(1)
+            break
+          }
+          for _, executable := range executables {
+            if executable.Name() == typeCommand {
+              fmt.Println(typeCommand + " is " + path + executable.Name())
+              isFound = true
+              break
+            }
+          }
+          if isFound {
+            break
+          }
+        }
+        if !isFound {
+          fmt.Println(typeCommand + ": not found")
         }
       default:
         fmt.Println(strings.TrimSuffix(input, "\n") + ": command not found")
