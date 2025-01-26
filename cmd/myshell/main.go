@@ -67,9 +67,8 @@ func main() {
         for _, path := range paths {
           executables, errReadDir := os.ReadDir(path)
           if errReadDir != nil {
-            fmt.Fprintln(os.Stderr, "Error reading directory: ", errReadDir)
-            os.Exit(1)
-            break
+            // skipping directories that we can't read
+            continue 
           }
           for _, executable := range executables {
             if executable.Name() == typeCommand {
