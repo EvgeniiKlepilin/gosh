@@ -14,6 +14,7 @@ var _ = fmt.Fprint
 var BUILTINS = map[string]bool{
   "echo": true,
   "exit": true,
+  "type": true,
 }
 
 func main() {
