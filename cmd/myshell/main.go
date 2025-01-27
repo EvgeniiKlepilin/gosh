@@ -139,7 +139,12 @@ func CdCommand(arguments []string) {
     fmt.Fprintln(os.Stderr, "Invalid arguments")
     return
   }
-  path := arguments[0]
+  var path string
+  if arguments[0] == "~" {
+    path = os.Getenv("HOME")
+  } else {
+    path = arguments[0] 
+  }
   err := os.Chdir(path)
   checkError(err, "cd: " + path + ": No such file or directory")
 }
