@@ -16,6 +16,7 @@ var BUILTINS = map[string]bool{
   "echo": true,
   "exit": true,
   "type": true,
+  "pwd": true,
 }
 
 var PATH = os.Getenv("PATH")
@@ -41,12 +42,12 @@ func main() {
     switch command {
       case "exit":
         ExitCommand(arguments)
-        continue
       case "echo":
         fmt.Println(strings.Join(arguments, " "))
       case "type":
         TypeCommand(arguments)
-        continue
+      case "pwd":
+        PwdCommand()
       default:
         paths := strings.Split(PATH, ":")
         isFound := false
@@ -120,4 +121,13 @@ func ExecutableCommand(command string, arguments []string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Run()
+}
+
+func PwdCommand() {
+  dir, err := os.Getwd()
+  if err != nil {
+    fmt.Fprintln(os.Stderr, "Error getting working directory", err)
+    return
+  }
+  fmt.Println(dir)
 }
