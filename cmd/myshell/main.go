@@ -99,27 +99,20 @@ func TypeCommand(arguments []string) {
     return
   }
   paths := strings.Split(PATH, ":")
-  isFound := false
   for _, path := range paths {
     executables, errReadDir := os.ReadDir(path)
     if errReadDir != nil {
       // skipping directories that we can't read
-      return
+     continue 
     }
     for _, executable := range executables {
       if executable.Name() == typeCommand {
         fmt.Println(typeCommand + " is " + path + "/" + executable.Name())
-        isFound = true
         return
       }
     }
-    if isFound {
-      return
-    }
   }
-  if !isFound {
-    fmt.Println(typeCommand + ": not found")
-  }
+  fmt.Println(typeCommand + ": not found")
 }
 
 func ExecutableCommand(command string, arguments []string) {
