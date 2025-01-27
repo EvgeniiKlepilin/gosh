@@ -1,9 +1,10 @@
 package main
 
 import (
-	"bufio"
+"bufio"
 	"fmt"
 	"os"
+  "os/exec"
   "strings"
   "strconv"
 )
@@ -39,40 +40,25 @@ func main() {
 
     switch command {
       case "exit":
-        if len(fields) > 1 {
-          code, errConv := strconv.Atoi(fields[1])
-          if errConv != nil {
-            fmt.Fprintln(os.Stderr, "Invalid error code", errConv)
-            continue
-          }
-          os.Exit(code)
-        } else {
-          os.Exit(0)
-        }  
+        ExitCommand(arguments)
+        continue
       case "echo":
         fmt.Println(strings.Join(arguments, " "))
       case "type":
-        if len(arguments) != 1 {
-          fmt.Fprintln(os.Stderr, "Invalid arguments")
-          continue
-        }
-        typeCommand := arguments[0]
-        _, present := BUILTINS[typeCommand]
-        if present {
-          fmt.Println(typeCommand + " is a shell builtin")
-          break
-        }
+        TypeCommand(arguments)
+        continue
+      default:
         paths := strings.Split(PATH, ":")
         isFound := false
         for _, path := range paths {
           executables, errReadDir := os.ReadDir(path)
           if errReadDir != nil {
             // skipping directories that we can't read
-            continue 
+            continue
           }
           for _, executable := range executables {
-            if executable.Name() == typeCommand {
-              fmt.Println(typeCommand + " is " + path + "/" + executable.Name())
+            if executable.Name() == command {
+              ExecutableCommand(command, arguments)
               isFound = true
               break
             }
@@ -82,10 +68,63 @@ func main() {
           }
         }
         if !isFound {
-          fmt.Println(typeCommand + ": not found")
+          fmt.Println(strings.TrimSuffix(input, "\n") + ": command not found")
         }
-      default:
-        fmt.Println(strings.TrimSuffix(input, "\n") + ": command not found")
     }
   }
+}
+
+func ExitCommand(arguments []string) {
+  if len(arguments) > 0 {
+    code, errConv := strconv.Atoi(arguments[0])
+    if errConv != nil {
+      fmt.Fprintln(os.Stderr, "Invalid error code", errConv)
+      return
+    }
+    os.Exit(code)
+  } else {
+    os.Exit(0)
+  }  
+}
+
+func TypeCommand(arguments []string) {
+  if len(arguments) != 1 {
+    fmt.Fprintln(os.Stderr, "Invalid arguments")
+    return 
+  }
+  typeCommand := arguments[0]
+  _, present := BUILTINS[typeCommand]
+  if present {
+    fmt.Println(typeCommand + " is a shell builtin")
+    return
+  }
+  paths := strings.Split(PATH, ":")
+  isFound := false
+  for _, path := range paths {
+    executables, errReadDir := os.ReadDir(path)
+    if errReadDir != nil {
+      // skipping directories that we can't read
+      return
+    }
+    for _, executable := range executables {
+      if executable.Name() == typeCommand {
+        fmt.Println(typeCommand + " is " + path + "/" + executable.Name())
+        isFound = true
+        return
+      }
+    }
+    if isFound {
+      return
+    }
+  }
+  if !isFound {
+    fmt.Println(typeCommand + ": not found")
+  }
+}
+
+func ExecutableCommand(command string, arguments []string) {
+  cmd := exec.Command(command, arguments...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
 }
