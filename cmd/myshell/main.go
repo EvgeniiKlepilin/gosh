@@ -17,6 +17,7 @@ var BUILTINS = map[string]bool{
   "exit": true,
   "type": true,
   "pwd": true,
+  "cd": true,
 }
 
 var PATH = os.Getenv("PATH")
@@ -48,6 +49,8 @@ func main() {
         TypeCommand(arguments)
       case "pwd":
         PwdCommand()
+      case "cd":
+        CdCommand(arguments)
       default:
         paths := strings.Split(PATH, ":")
         isFound := false
@@ -125,9 +128,26 @@ func ExecutableCommand(command string, arguments []string) {
 
 func PwdCommand() {
   dir, err := os.Getwd()
-  if err != nil {
-    fmt.Fprintln(os.Stderr, "Error getting working directory", err)
+  if checkError(err, "Error getting working directory") {
     return
   }
   fmt.Println(dir)
+}
+
+func CdCommand(arguments []string) {
+  if len(arguments) != 1 {
+    fmt.Fprintln(os.Stderr, "Invalid arguments")
+    return
+  }
+  path := arguments[0]
+  err := os.Chdir(path)
+  checkError(err, "cd: " + path + ": No such file or directory")
+}
+
+func checkError(err error, msg string)bool {
+  if err != nil {
+    fmt.Fprintln(os.Stderr, msg)
+    return true
+  }
+  return false
 }
