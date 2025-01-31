@@ -44,12 +44,7 @@ func main() {
       case "exit":
         ExitCommand(arguments)
       case "echo":
-        if strings.Contains(input, "'") {
-          argumentString := strings.TrimPrefix(strings.ReplaceAll(input, "'", ""), "echo ")
-          fmt.Print(argumentString)
-        } else {
-          fmt.Println(strings.Join(arguments, " "))
-        }
+        EchoCommand(input, arguments)
       case "type":
         TypeCommand(arguments)
       case "pwd":
@@ -94,6 +89,21 @@ func ExitCommand(arguments []string) {
   } else {
     os.Exit(0)
   }  
+}
+
+func EchoCommand(input string, arguments []string) {
+  if strings.Contains(input, "\"") {
+    fields := strings.Split(input, " \"")
+    for idx, field := range fields {
+      fields[idx] = strings.ReplaceAll(strings.Trim(field, " "), "\"", "")
+    }
+    fmt.Print(strings.Join(fields[1:], " "))
+  } else if strings.Contains(input, "'") {
+    argumentString := strings.TrimPrefix(strings.ReplaceAll(input, "'", ""), "echo ")
+    fmt.Print(argumentString)
+  } else {
+    fmt.Println(strings.Join(arguments, " "))
+  } 
 }
 
 func TypeCommand(arguments []string) {
@@ -156,7 +166,24 @@ func CdCommand(arguments []string) {
 
 func HandleQuotes(input string) []string {
   var fields []string
-  if strings.Contains(input, "'") {
+  if strings.Contains(input, "\"") {
+    isInsideQuotes := false
+    currentField := ""
+    for _, char := range input {
+      if char == '"' {
+        isInsideQuotes = !isInsideQuotes
+        if !isInsideQuotes {
+          fields = append(fields, currentField)
+          currentField = ""
+        }
+      } else if char == ' ' && !isInsideQuotes {
+        fields = append(fields, currentField)
+        currentField = ""
+      } else {
+        currentField += string(char)
+      }
+    }
+  } else if strings.Contains(input, "'") {
     isInsideQuotes := false
     currentField := ""
     for _, char := range input {
