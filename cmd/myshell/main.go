@@ -35,16 +35,21 @@ func main() {
       break
     }
 
-    fields := strings.Fields(input)
+    fields := HandleQuotes(input)
 
     command := fields[0]
-    arguments := fields[1:]
+    arguments := removeEmptyStrings(fields[1:])
 
     switch command {
       case "exit":
         ExitCommand(arguments)
       case "echo":
-        fmt.Println(strings.Join(arguments, " "))
+        if strings.Contains(input, "'") {
+          argumentString := strings.TrimPrefix(strings.ReplaceAll(input, "'", ""), "echo ")
+          fmt.Print(argumentString)
+        } else {
+          fmt.Println(strings.Join(arguments, " "))
+        }
       case "type":
         TypeCommand(arguments)
       case "pwd":
@@ -149,10 +154,45 @@ func CdCommand(arguments []string) {
   checkError(err, "cd: " + path + ": No such file or directory")
 }
 
+func HandleQuotes(input string) []string {
+  var fields []string
+  if strings.Contains(input, "'") {
+    isInsideQuotes := false
+    currentField := ""
+    for _, char := range input {
+      if char == '\'' {
+        isInsideQuotes = !isInsideQuotes
+        if !isInsideQuotes {
+          fields = append(fields, currentField)
+          currentField = ""
+        }
+      } else if char == ' ' && !isInsideQuotes {
+        fields = append(fields, currentField)
+        currentField = ""
+      } else {
+        currentField += string(char)
+      }
+    }
+  } else {
+    fields = strings.Fields(input)
+  }
+  return fields
+}
+
 func checkError(err error, msg string)bool {
   if err != nil {
     fmt.Fprintln(os.Stderr, msg)
     return true
   }
   return false
+}
+
+func removeEmptyStrings(s []string) []string {
+    var result []string
+    for _, str := range s {
+        if str != "" {
+            result = append(result, str)
+        }
+    }
+    return result
 }
